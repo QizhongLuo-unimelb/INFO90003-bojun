@@ -83,6 +83,11 @@ public class StepNodePlayerController : MonoBehaviour
         }
     }
 
+    void OnEnable()
+    {
+        RefreshCurrentNodeAfterSceneLoad();
+    }
+
     void Update()
     {
         if (isMoving)
@@ -138,6 +143,71 @@ public class StepNodePlayerController : MonoBehaviour
         }
 
         TryMoveToInputLetter(input.Trim()[0]);
+    }
+
+    public void ForceRefreshForIPad()
+    {
+        allNodes = FindObjectsOfType<StepNode>();
+
+        if (adjacencyDetector == null)
+        {
+            adjacencyDetector = GetComponent<StepNodeAdjacencyDetector>();
+        }
+
+        isMoving = false;
+        targetNode = null;
+    }
+
+    public void TryMoveToInputLetterFromIPad(char inputLetter)
+    {
+        ForceRefreshForIPad();
+
+        if (currentNode == null)
+        {
+            currentNode = FindClosestNodeToPlayer();
+        }
+
+        if (currentNode == null)
+        {
+            Debug.LogWarning("iPad input failed: currentNode is null.");
+            return;
+        }
+
+        char normalizedLetter = char.ToLowerInvariant(inputLetter);
+        int hotkeyIndex = normalizedLetter - 'a';
+
+        StepNode nextNode = FindNodeForHotkeyIndex(hotkeyIndex);
+
+        if (nextNode == null)
+        {
+            ShowCannotMoveMessage();
+            return;
+        }
+
+        TryMove(nextNode);
+    }
+
+    StepNode FindClosestNodeToPlayer()
+    {
+        allNodes = FindObjectsOfType<StepNode>();
+
+        StepNode closest = null;
+        float closestDistance = Mathf.Infinity;
+
+        foreach (StepNode node in allNodes)
+        {
+            if (node == null) continue;
+
+            float distance = Vector3.Distance(transform.position, node.transform.position);
+
+            if (distance < closestDistance)
+            {
+                closestDistance = distance;
+                closest = node;
+            }
+        }
+
+        return closest;
     }
 
     void TryMoveToHotkeyNode(int hotkeyIndex)
@@ -322,4 +392,34 @@ public class StepNodePlayerController : MonoBehaviour
             messageText.text = "You cannot go that way.";
         }
     }
+
+    void RefreshCurrentNodeAfterSceneLoad()
+    {
+        allNodes = FindObjectsOfType<StepNode>();
+
+        string returnNodeName = PlayerPrefs.GetString("ReturnNodeName", "");
+
+        if (!string.IsNullOrEmpty(returnNodeName))
+        {
+            StepNode returnNode = FindNodeByName(returnNodeName);
+
+            if (returnNode != null)
+            {
+                currentNode = returnNode;
+
+                transform.position = GetPlayerPosition(currentNode);
+
+                Debug.Log("Restored current node: " + currentNode.name);
+            }
+        }
+
+        isMoving = false;
+        targetNode = null;
+
+        if (adjacencyDetector == null)
+        {
+            adjacencyDetector = GetComponent<StepNodeAdjacencyDetector>();
+        }
+    }
 }
+

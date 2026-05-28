@@ -1,8 +1,9 @@
-using UnityEngine;
 using System;
 using System.Collections.Generic;
 using System.IO.Ports;
 using System.Threading;
+using UnityEngine;
+using static UnityEditor.Experimental.GraphView.GraphView;
 
 public class ArduinoSerialInput : MonoBehaviour
 {
@@ -106,7 +107,7 @@ public class ArduinoSerialInput : MonoBehaviour
         }
     }
 
-    void HandleSerialInput(string input)
+    public void HandleSerialInput(string input)
     {
         Debug.Log("Arduino input: " + input);
 
@@ -132,6 +133,31 @@ public class ArduinoSerialInput : MonoBehaviour
         if (!TryHandleSceneInput(inputLetter))
         {
             Debug.LogWarning("Arduino input received, but no scene handler was found for: " + inputLetter);
+        }
+    }
+
+    public void HandleIPadInput(string input)
+    {
+        Debug.Log("iPad input: " + input);
+
+        player = FindObjectOfType<StepNodePlayerController>();
+
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            return;
+        }
+
+        char inputLetter = input.Trim().ToLowerInvariant()[0];
+
+        if (inputLetter < 'a' || inputLetter > 'n')
+        {
+            Debug.LogWarning("Unknown iPad input: " + input);
+            return;
+        }
+
+        if (player != null)
+        {
+            player.TryMoveToInputLetterFromIPad(inputLetter);
         }
     }
 
