@@ -4,18 +4,18 @@ using UnityEngine.UI;
 
 public class NotificationUIController : MonoBehaviour
 {
-    const float PanelMinWidth = 520f;
-    const float PanelMaxWidth = 900f;
-    const float PanelMinHeight = 132f;
-    const float PanelMaxHeight = 360f;
-    const float HorizontalPadding = 46f;
-    const float HeaderHeight = 64f;
-    const float BodyTopPadding = 22f;
-    const float BottomPadding = 28f;
-    const float IconSize = 38f;
-    const float IconTitleGap = 14f;
-    const float BorderThickness = 8f;
-    const float HeaderDividerThickness = 4f;
+    const float PanelMinWidth = 720f;
+    const float PanelMaxWidth = 1180f;
+    const float PanelMinHeight = 190f;
+    const float PanelMaxHeight = 520f;
+    const float HorizontalPadding = 62f;
+    const float HeaderHeight = 86f;
+    const float BodyTopPadding = 30f;
+    const float BottomPadding = 38f;
+    const float IconSize = 52f;
+    const float IconTitleGap = 20f;
+    const float BorderThickness = 12f;
+    const float HeaderDividerThickness = 6f;
 
     static readonly Color MinecraftWoodColor = new Color(0.72f, 0.42f, 0.18f, 0.96f);
     static readonly Color MinecraftWoodDarkColor = new Color(0.18f, 0.09f, 0.035f, 1f);
@@ -39,15 +39,21 @@ public class NotificationUIController : MonoBehaviour
     public Sprite shoppingIcon;
     public Sprite defaultIcon;
 
+    [Header("Audio")]
+    public AudioClip notificationSound;
+    public float notificationVolume = 0.75f;
+
     Image backgroundImage;
     RectTransform topBorder;
     RectTransform bottomBorder;
     RectTransform leftBorder;
     RectTransform rightBorder;
     RectTransform plankLine;
+    AudioSource audioSource;
 
     void Awake()
     {
+        EnsureAudioSource();
         LoadMinecraftFont();
         ApplyLayout();
     }
@@ -75,9 +81,54 @@ public class NotificationUIController : MonoBehaviour
         ShowNotification(title, CleanMessage(nodeMessage), kind);
     }
 
+    public void ShowInitial(StepNode node)
+    {
+        if (node == null)
+        {
+            return;
+        }
+
+        string nodeMessage = node.GetInitialNodeMessage();
+        NotificationKind kind = ResolveKind(node, nodeMessage);
+        string notificationTitle = node.GetInitialNotificationTitle();
+        string title = string.IsNullOrWhiteSpace(notificationTitle)
+            ? GetDefaultTitle(kind)
+            : notificationTitle;
+
+        ShowNotification(title, CleanMessage(nodeMessage), kind);
+    }
+
     public void ShowSystemMessage(string title, string message)
     {
         ShowNotification(title, message, NotificationKind.System);
+    }
+
+    public void Hide()
+    {
+        if (titleText != null)
+        {
+            titleText.text = "";
+        }
+
+        if (messageText != null)
+        {
+            messageText.text = "";
+        }
+
+        if (timeText != null)
+        {
+            timeText.text = "";
+        }
+
+        if (iconImage != null)
+        {
+            iconImage.enabled = false;
+        }
+
+        if (notificationPanel != null)
+        {
+            notificationPanel.gameObject.SetActive(false);
+        }
     }
 
     void ShowNotification(string title, string message, NotificationKind kind)
@@ -113,16 +164,22 @@ public class NotificationUIController : MonoBehaviour
         }
 
         ApplyLayout();
+        PlayNotificationSound();
     }
 
     NotificationKind ResolveKind(StepNode node)
+    {
+        return ResolveKind(node, node.GetNodeMessageForTrigger());
+    }
+
+    NotificationKind ResolveKind(StepNode node, string nodeMessage)
     {
         if (node.notificationKind != NotificationKind.Auto)
         {
             return node.notificationKind;
         }
 
-        string source = (node.name + " " + node.GetNodeMessageForTrigger()).ToLowerInvariant();
+        string source = (node.name + " " + nodeMessage).ToLowerInvariant();
 
         if (source.Contains("email") || source.Contains("gmail"))
         {
@@ -195,12 +252,44 @@ public class NotificationUIController : MonoBehaviour
         }
     }
 
+    void EnsureAudioSource()
+    {
+        if (audioSource != null)
+        {
+            return;
+        }
+
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+        }
+
+        audioSource.playOnAwake = false;
+        audioSource.spatialBlend = 0f;
+
+        if (notificationSound == null)
+        {
+            notificationSound = Resources.Load<AudioClip>("Audio/iOSLikeNotification");
+        }
+    }
+
+    void PlayNotificationSound()
+    {
+        EnsureAudioSource();
+
+        if (audioSource != null && notificationSound != null)
+        {
+            audioSource.PlayOneShot(notificationSound, notificationVolume);
+        }
+    }
+
     void ApplyLayout()
     {
         LoadMinecraftFont();
         EnsureWoodFrame();
-        ConfigureText(titleText, TextAlignmentOptions.MidlineLeft, TextWrappingModes.NoWrap, 30f, 0f);
-        ConfigureText(messageText, TextAlignmentOptions.Top, TextWrappingModes.Normal, 32f, -4f);
+        ConfigureText(titleText, TextAlignmentOptions.MidlineLeft, TextWrappingModes.NoWrap, 44f, 0f);
+        ConfigureText(messageText, TextAlignmentOptions.TopLeft, TextWrappingModes.Normal, 46f, -2f);
         ConfigureText(timeText, TextAlignmentOptions.Center, TextWrappingModes.NoWrap, 1f, 0f);
 
         Vector2 panelSize = CalculatePanelSize();

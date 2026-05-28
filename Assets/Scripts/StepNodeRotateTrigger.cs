@@ -24,6 +24,12 @@ public class StepNodeRotateTrigger : MonoBehaviour
             return;
         }
 
+        if (triggerOnce && rotatingMaze.HasPersistedRunRotation)
+        {
+            hasTriggered = true;
+            return;
+        }
+
         hasTriggered = true;
         rotatingMaze.RotateMaze();
     }

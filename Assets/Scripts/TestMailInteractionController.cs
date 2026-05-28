@@ -8,6 +8,8 @@ public class TestMailInteractionController : MonoBehaviour
     [Header("Interaction")]
     public KeyCode clearMailKey = KeyCode.L;
     public string returnSceneName = "Main game";
+    public string clearPromptText = "Press the entrance button of this zone to clear the Email";
+    public string sceneTitleText = "The Tree of Focus Disturbed by Emails";
 
     [Header("Timing")]
     public float countdownSeconds = 30f;
@@ -112,6 +114,48 @@ public class TestMailInteractionController : MonoBehaviour
 
         hudLabelText = CreateHudText(panelObject.transform, "Status Labels", new Vector2(16f, 10f), new Vector2(-104f, -10f), TextAlignmentOptions.TopRight);
         hudValueText = CreateHudText(panelObject.transform, "Status Values", new Vector2(164f, 10f), new Vector2(-16f, -10f), TextAlignmentOptions.TopRight);
+
+        TextMeshProUGUI titleText = CreateCanvasText(canvasObject.transform, "Email Scene Title", sceneTitleText, 38f, FontStyles.Bold, Color.white, TextAlignmentOptions.Center);
+        titleText.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+        titleText.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+        titleText.rectTransform.pivot = new Vector2(0.5f, 1f);
+        titleText.rectTransform.anchoredPosition = new Vector2(220f, -28f);
+        titleText.rectTransform.sizeDelta = new Vector2(860f, 96f);
+
+        GameObject promptObject = new GameObject("Clear Email Prompt", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        promptObject.transform.SetParent(canvasObject.transform, false);
+
+        RectTransform promptRect = promptObject.GetComponent<RectTransform>();
+        promptRect.anchorMin = new Vector2(0f, 1f);
+        promptRect.anchorMax = new Vector2(0f, 1f);
+        promptRect.pivot = new Vector2(0f, 1f);
+        promptRect.anchoredPosition = new Vector2(32f, -24f);
+        promptRect.sizeDelta = new Vector2(620f, 82f);
+
+        Image promptImage = promptObject.GetComponent<Image>();
+        promptImage.color = new Color(0.06f, 0.075f, 0.095f, 0.9f);
+        promptImage.raycastTarget = false;
+
+        GameObject accentObject = new GameObject("Prompt Accent", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        accentObject.transform.SetParent(promptObject.transform, false);
+
+        RectTransform accentRect = accentObject.GetComponent<RectTransform>();
+        accentRect.anchorMin = new Vector2(0f, 0f);
+        accentRect.anchorMax = new Vector2(0f, 1f);
+        accentRect.pivot = new Vector2(0f, 0.5f);
+        accentRect.anchoredPosition = Vector2.zero;
+        accentRect.sizeDelta = new Vector2(6f, 0f);
+
+        Image accentImage = accentObject.GetComponent<Image>();
+        accentImage.color = new Color(0.58f, 0.66f, 0.76f, 1f);
+        accentImage.raycastTarget = false;
+
+        TextMeshProUGUI promptText = CreateHudText(promptObject.transform, "Prompt Text", new Vector2(26f, 8f), new Vector2(-24f, -8f), TextAlignmentOptions.MidlineLeft);
+        promptText.text = clearPromptText;
+        promptText.fontSize = 26f;
+        promptText.fontStyle = FontStyles.Normal;
+        promptText.color = new Color(0.94f, 0.96f, 0.98f, 1f);
+        promptText.textWrappingMode = TextWrappingModes.Normal;
     }
 
     void UpdateHud()
@@ -136,21 +180,30 @@ public class TestMailInteractionController : MonoBehaviour
 
     TextMeshProUGUI CreateHudText(Transform parent, string name, Vector2 offsetMin, Vector2 offsetMax, TextAlignmentOptions alignment)
     {
-        GameObject textObject = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
-        textObject.transform.SetParent(parent, false);
+        TextMeshProUGUI text = CreateCanvasText(parent, name, "", 24f, FontStyles.Bold, new Color(0.08f, 0.10f, 0.13f, 1f), alignment);
 
-        RectTransform textRect = textObject.GetComponent<RectTransform>();
+        RectTransform textRect = text.rectTransform;
         textRect.anchorMin = Vector2.zero;
         textRect.anchorMax = Vector2.one;
         textRect.offsetMin = offsetMin;
         textRect.offsetMax = offsetMax;
 
-        TextMeshProUGUI text = textObject.GetComponent<TextMeshProUGUI>();
-        text.fontSize = 24f;
-        text.fontStyle = FontStyles.Bold;
-        text.color = new Color(0.08f, 0.10f, 0.13f, 1f);
-        text.alignment = alignment;
         text.enableWordWrapping = false;
+        return text;
+    }
+
+    TextMeshProUGUI CreateCanvasText(Transform parent, string name, string value, float fontSize, FontStyles style, Color color, TextAlignmentOptions alignment)
+    {
+        GameObject textObject = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+        textObject.transform.SetParent(parent, false);
+
+        TextMeshProUGUI text = textObject.GetComponent<TextMeshProUGUI>();
+        text.text = value;
+        text.fontSize = fontSize;
+        text.fontStyle = style;
+        text.color = color;
+        text.alignment = alignment;
+        text.textWrappingMode = TextWrappingModes.Normal;
         text.raycastTarget = false;
         return text;
     }

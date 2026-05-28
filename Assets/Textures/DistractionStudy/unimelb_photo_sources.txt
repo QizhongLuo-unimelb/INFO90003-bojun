@@ -1,0 +1,33 @@
+UniMelb photo replacements for the Instagram preview images.
+
+All files below were downloaded from Wikimedia Commons using resized Special:Redirect/file URLs on 2026-05-26. Existing Unity .meta GUIDs were kept by replacing the image files in place.
+
+- studying_photo.jpg
+  Source: https://commons.wikimedia.org/wiki/File:Old_Arts_Building_University_of_Melbourne_2018.jpg
+  Author: Gracchus250
+  License: CC BY-SA 4.0
+
+- ins_photo_library.jpg
+  Source: https://commons.wikimedia.org/wiki/File:Baillieu_Library.JPG
+  Author: Polly clip
+  License: CC BY-SA 3.0
+
+- ins_photo_laptop.jpg
+  Source: https://commons.wikimedia.org/wiki/File:University_of_Melbourne_building.jpg
+  Author: Savio Sebastian
+  License: CC BY 2.0
+
+- ins_photo_study.jpg
+  Source: https://commons.wikimedia.org/wiki/File:SouthLawnUniMelb.JPG
+  Author: Unwicked
+  License: CC BY-SA 3.0
+
+- ins_photo_reading_laptop.jpg
+  Source: https://commons.wikimedia.org/wiki/File:Old_Quad_colonnade_University_of_Melbourne_2018.jpg
+  Author: Gracchus250
+  License: CC BY-SA 4.0
+
+- ins_photo_virtual_learning.jpg
+  Source: https://commons.wikimedia.org/wiki/File:Old_Arts_Building._Parkville_Campus_of_University_of_Melbourne_(cropped).JPG
+  Author: Polly clip
+  License: CC BY-SA 3.0

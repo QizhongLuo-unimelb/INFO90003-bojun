@@ -6,15 +6,36 @@ public class RotatingMazeController : MonoBehaviour
     public Renderer[] ledBorders;
     public float rotationDegrees = -90f;
     public float rotationSpeed = 180f;
+    public bool persistRotationInRun = true;
 
     private Quaternion targetRotation;
     private bool isRotating = false;
+
+    public bool HasPersistedRunRotation
+    {
+        get
+        {
+            return persistRotationInRun && GameRunState.GetMainMazeRotationCount() > 0;
+        }
+    }
 
     void Awake()
     {
         if (rotatingGroup == null)
         {
             rotatingGroup = transform;
+        }
+
+        if (persistRotationInRun)
+        {
+            int rotationCount = GameRunState.GetMainMazeRotationCount();
+            if (rotationCount > 0)
+            {
+                rotatingGroup.rotation = Quaternion.AngleAxis(
+                    rotationDegrees * rotationCount,
+                    Vector3.up
+                ) * rotatingGroup.rotation;
+            }
         }
 
         targetRotation = rotatingGroup.rotation;
@@ -46,6 +67,11 @@ public class RotatingMazeController : MonoBehaviour
         if (rotatingGroup == null)
         {
             return;
+        }
+
+        if (persistRotationInRun)
+        {
+            GameRunState.AdvanceMainMazeRotationCount();
         }
 
         targetRotation = Quaternion.AngleAxis(rotationDegrees, Vector3.up) * rotatingGroup.rotation;

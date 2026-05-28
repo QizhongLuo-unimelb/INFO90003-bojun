@@ -32,6 +32,11 @@ public class StepNode : MonoBehaviour
         get { return hasTriggered; }
     }
 
+    void Awake()
+    {
+        hasTriggered = GameRunState.HasVisitedNode(name);
+    }
+
     public string GetNotificationTitleForTrigger()
     {
         if (hasTriggered && !string.IsNullOrWhiteSpace(repeatedNotificationTitle))
@@ -39,6 +44,11 @@ public class StepNode : MonoBehaviour
             return repeatedNotificationTitle;
         }
 
+        return notificationTitle;
+    }
+
+    public string GetInitialNotificationTitle()
+    {
         return notificationTitle;
     }
 
@@ -52,8 +62,14 @@ public class StepNode : MonoBehaviour
         return nodeMessage;
     }
 
+    public string GetInitialNodeMessage()
+    {
+        return nodeMessage;
+    }
+
     public void MarkTriggered()
     {
         hasTriggered = true;
+        GameRunState.MarkNodeVisited(name);
     }
 }

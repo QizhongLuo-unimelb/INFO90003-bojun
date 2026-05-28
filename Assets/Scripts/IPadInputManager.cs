@@ -2,60 +2,68 @@ using UnityEngine;
 
 public class IPadInputManager : MonoBehaviour
 {
-    public ArduinoSerialInput arduinoInput;
+    public static IPadInputManager Instance { get; private set; }
+
+    public ArduinoSerialManager arduinoInput;
+
+    void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+    }
 
     public void PressTile(int tileID)
     {
-        if (arduinoInput == null)
-        {
-            arduinoInput = FindObjectOfType<ArduinoSerialInput>();
-        }
         Debug.Log("iPad tile pressed: " + tileID);
 
-        switch (tileID)
+        if (tileID < 0 || tileID > 13)
         {
-            case 0:
-                arduinoInput.SendMessage("HandleIPadInput", "a");
-                break;
-            case 1:
-                arduinoInput.SendMessage("HandleIPadInput", "b");
-                break;
-            case 2:
-                arduinoInput.SendMessage("HandleIPadInput", "c");
-                break;
-            case 3:
-                arduinoInput.SendMessage("HandleIPadInput", "d");
-                break;
-            case 4:
-                arduinoInput.SendMessage("HandleIPadInput", "e");
-                break;
-            case 5:
-                arduinoInput.SendMessage("HandleIPadInput", "f");
-                break;
-            case 6:
-                arduinoInput.SendMessage("HandleIPadInput", "g");
-                break;
-            case 7:
-                arduinoInput.SendMessage("HandleIPadInput", "h");
-                break;
-            case 8:
-                arduinoInput.SendMessage("HandleIPadInput", "i");
-                break;
-            case 9:
-                arduinoInput.SendMessage("HandleIPadInput", "j");
-                break;
-            case 10:
-                arduinoInput.SendMessage("HandleIPadInput", "k");
-                break;
-            case 11:
-                arduinoInput.SendMessage("HandleIPadInput", "l");
-                break;
-            case 12:
-                arduinoInput.SendMessage("HandleIPadInput", "m");
-                break;
-            case 13:
-                arduinoInput.SendMessage("HandleIPadInput", "n");
-                break;
+            Debug.LogWarning("Unknown iPad tile: " + tileID);
+            return;
+        }
+
+        EnsureArduinoInput();
+
+        if (arduinoInput == null)
+        {
+            Debug.LogWarning("No ArduinoSerialManager found for iPad input.");
+            return;
+        }
+
+        char inputLetter = (char)('a' + tileID);
+        arduinoInput.HandleIPadInput(inputLetter.ToString());
+    }
+
+    void EnsureArduinoInput()
+    {
+        if (arduinoInput == null)
+        {
+            arduinoInput = ArduinoSerialManager.Instance;
+        }
+
+        if (arduinoInput == null)
+        {
+            arduinoInput = FindFirstObjectByType<ArduinoSerialManager>();
+        }
+
+        if (arduinoInput == null)
+        {
+            GameObject managerObject = new GameObject("ArduinoSerialManager");
+            arduinoInput = managerObject.AddComponent<ArduinoSerialManager>();
+        }
+    }
+
+    void OnDestroy()
+    {
+        if (Instance == this)
+        {
+            Instance = null;
         }
     }
 }

@@ -1,12 +1,14 @@
+using UnityEngine;
 using System;
 using System.Collections.Generic;
 using System.IO.Ports;
 using System.Threading;
-using UnityEngine;
-using static UnityEditor.Experimental.GraphView.GraphView;
+using UnityEngine.SceneManagement;
 
-public class ArduinoSerialInput : MonoBehaviour
+public class ArduinoSerialManager : MonoBehaviour
 {
+    public static ArduinoSerialManager Instance { get; private set; }
+
     [Header("macOS Serial Settings")]
     public string portName = "/dev/cu.usbmodem101";
     public int baudRate = 9600;
@@ -21,11 +23,29 @@ public class ArduinoSerialInput : MonoBehaviour
     private readonly object lockObject = new object();
     private readonly Queue<string> pendingInputs = new Queue<string>();
 
+    void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Debug.LogWarning("Duplicate ArduinoSerialManager found. Destroying this instance.");
+            Destroy(gameObject);
+            return;
+        }
+
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+    }
+
     void Start()
     {
+        if (Instance != this)
+        {
+            return;
+        }
+
         if (player == null)
         {
-            player = FindObjectOfType<StepNodePlayerController>();
+            player = FindFirstObjectByType<StepNodePlayerController>();
         }
 
         OpenSerialPort();
@@ -56,6 +76,11 @@ public class ArduinoSerialInput : MonoBehaviour
 
     void OpenSerialPort()
     {
+        if (serialPort != null && serialPort.IsOpen)
+        {
+            return;
+        }
+
         try
         {
             serialPort = new SerialPort(portName, baudRate);
@@ -107,13 +132,13 @@ public class ArduinoSerialInput : MonoBehaviour
         }
     }
 
-    public void HandleSerialInput(string input)
+    void HandleSerialInput(string input)
     {
         Debug.Log("Arduino input: " + input);
 
         if (player == null)
         {
-            player = FindObjectOfType<StepNodePlayerController>();
+            player = FindFirstObjectByType<StepNodePlayerController>();
         }
 
         char inputLetter = input.Trim().ToLowerInvariant()[0];
@@ -140,11 +165,14 @@ public class ArduinoSerialInput : MonoBehaviour
     {
         Debug.Log("iPad input: " + input);
 
-        player = FindObjectOfType<StepNodePlayerController>();
-
         if (string.IsNullOrWhiteSpace(input))
         {
             return;
+        }
+
+        if (player == null)
+        {
+            player = FindFirstObjectByType<StepNodePlayerController>();
         }
 
         char inputLetter = input.Trim().ToLowerInvariant()[0];
@@ -158,14 +186,28 @@ public class ArduinoSerialInput : MonoBehaviour
         if (player != null)
         {
             player.TryMoveToInputLetterFromIPad(inputLetter);
+            return;
+        }
+
+        if (!TryHandleSceneInput(inputLetter))
+        {
+            Debug.LogWarning("iPad input received, but no scene handler was found for: " + inputLetter);
         }
     }
 
     bool TryHandleSceneInput(char inputLetter)
     {
+        if (SceneManager.GetActiveScene().name == GameRunState.BeginSceneName)
+        {
+            GameRunState.ResetRun();
+            GameRunState.BeginRun();
+            SceneManager.LoadScene(GameRunState.MainSceneName);
+            return true;
+        }
+
         if (inputLetter == 'l')
         {
-            TestMailInteractionController mailController = FindObjectOfType<TestMailInteractionController>();
+            TestMailInteractionController mailController = FindFirstObjectByType<TestMailInteractionController>();
             if (mailController != null)
             {
                 mailController.TriggerClearMail();
@@ -175,7 +217,7 @@ public class ArduinoSerialInput : MonoBehaviour
 
         if (inputLetter == 'm')
         {
-            RiverBoatGameController boatController = FindObjectOfType<RiverBoatGameController>();
+            RiverBoatGameController boatController = FindFirstObjectByType<RiverBoatGameController>();
             if (boatController != null)
             {
                 boatController.FocusForSeconds();
@@ -185,7 +227,7 @@ public class ArduinoSerialInput : MonoBehaviour
 
         if (inputLetter == 'n')
         {
-            PhotoNotificationPreviewController previewController = FindObjectOfType<PhotoNotificationPreviewController>();
+            PhotoNotificationPreviewController previewController = FindFirstObjectByType<PhotoNotificationPreviewController>();
             if (previewController != null)
             {
                 previewController.PreviewForSeconds();
@@ -203,7 +245,10 @@ public class ArduinoSerialInput : MonoBehaviour
 
     void OnDestroy()
     {
-        CloseSerialPort();
+        if (Instance == this)
+        {
+            Instance = null;
+        }
     }
 
     void CloseSerialPort()

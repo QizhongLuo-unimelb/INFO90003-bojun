@@ -23,6 +23,7 @@ public class StepNodePlayerController : MonoBehaviour
     private StepNode[] allNodes;
     private MazeRunResultTracker resultTracker;
     private Vector3 moveTargetPosition;
+    private bool suppressInitialNodeMessage;
     private static readonly KeyCode[] nodeHotkeys =
     {
         KeyCode.A,
@@ -70,6 +71,7 @@ public class StepNodePlayerController : MonoBehaviour
             if (returnNode != null)
             {
                 currentNode = returnNode;
+                suppressInitialNodeMessage = IsPortalReturnNode(returnNode);
                 PlayerPrefs.DeleteKey("ReturnNodeName");
                 PlayerPrefs.DeleteKey("ReturnSceneName");
                 PlayerPrefs.Save();
@@ -79,13 +81,16 @@ public class StepNodePlayerController : MonoBehaviour
         if (currentNode != null)
         {
             transform.position = GetPlayerPosition(currentNode);
-            ShowNodeMessage();
-        }
-    }
 
-    void OnEnable()
-    {
-        RefreshCurrentNodeAfterSceneLoad();
+            if (!suppressInitialNodeMessage)
+            {
+                ShowNodeMessage();
+            }
+            else
+            {
+                ShowPortalReturnMessage();
+            }
+        }
     }
 
     void Update()
@@ -128,7 +133,6 @@ public class StepNodePlayerController : MonoBehaviour
 
         if (hotkeyIndex < 0 || hotkeyIndex >= nodeHotkeys.Length)
         {
-            ShowCannotMoveMessage();
             return;
         }
 
@@ -154,6 +158,11 @@ public class StepNodePlayerController : MonoBehaviour
             adjacencyDetector = GetComponent<StepNodeAdjacencyDetector>();
         }
 
+        if (adjacencyDetector == null)
+        {
+            adjacencyDetector = gameObject.AddComponent<StepNodeAdjacencyDetector>();
+        }
+
         isMoving = false;
         targetNode = null;
     }
@@ -167,24 +176,7 @@ public class StepNodePlayerController : MonoBehaviour
             currentNode = FindClosestNodeToPlayer();
         }
 
-        if (currentNode == null)
-        {
-            Debug.LogWarning("iPad input failed: currentNode is null.");
-            return;
-        }
-
-        char normalizedLetter = char.ToLowerInvariant(inputLetter);
-        int hotkeyIndex = normalizedLetter - 'a';
-
-        StepNode nextNode = FindNodeForHotkeyIndex(hotkeyIndex);
-
-        if (nextNode == null)
-        {
-            ShowCannotMoveMessage();
-            return;
-        }
-
-        TryMove(nextNode);
+        TryMoveToInputLetter(inputLetter);
     }
 
     StepNode FindClosestNodeToPlayer()
@@ -196,7 +188,10 @@ public class StepNodePlayerController : MonoBehaviour
 
         foreach (StepNode node in allNodes)
         {
-            if (node == null) continue;
+            if (node == null)
+            {
+                continue;
+            }
 
             float distance = Vector3.Distance(transform.position, node.transform.position);
 
@@ -216,13 +211,11 @@ public class StepNodePlayerController : MonoBehaviour
 
         if (nextNode == null)
         {
-            ShowCannotMoveMessage();
             return;
         }
 
         if (adjacencyDetector != null && !adjacencyDetector.IsAdjacent(currentNode, nextNode))
         {
-            ShowCannotMoveMessage();
             return;
         }
 
@@ -276,7 +269,6 @@ public class StepNodePlayerController : MonoBehaviour
     {
         if (nextNode == null)
         {
-            ShowCannotMoveMessage();
             return;
         }
 
@@ -381,45 +373,22 @@ public class StepNodePlayerController : MonoBehaviour
         }
     }
 
-    void ShowCannotMoveMessage()
+    bool IsPortalReturnNode(StepNode node)
+    {
+        return node != null && node.GetComponent<NodeScenePortal>() != null;
+    }
+
+    void ShowPortalReturnMessage()
     {
         if (notificationUI != null)
         {
-            notificationUI.ShowSystemMessage("Maze", "You cannot go that way.");
-        }
-        else if (messageText != null)
-        {
-            messageText.text = "You cannot go that way.";
-        }
-    }
-
-    void RefreshCurrentNodeAfterSceneLoad()
-    {
-        allNodes = FindObjectsOfType<StepNode>();
-
-        string returnNodeName = PlayerPrefs.GetString("ReturnNodeName", "");
-
-        if (!string.IsNullOrEmpty(returnNodeName))
-        {
-            StepNode returnNode = FindNodeByName(returnNodeName);
-
-            if (returnNode != null)
-            {
-                currentNode = returnNode;
-
-                transform.position = GetPlayerPosition(currentNode);
-
-                Debug.Log("Restored current node: " + currentNode.name);
-            }
+            notificationUI.ShowInitial(currentNode);
+            return;
         }
 
-        isMoving = false;
-        targetNode = null;
-
-        if (adjacencyDetector == null)
+        if (messageText != null)
         {
-            adjacencyDetector = GetComponent<StepNodeAdjacencyDetector>();
+            messageText.text = currentNode.GetInitialNodeMessage();
         }
     }
 }
-

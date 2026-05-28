@@ -19,7 +19,42 @@ public class MobileWebController : MonoBehaviour
     private readonly object lockObj = new object();
     private static MobileWebController instance;
 
-    void Start()
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    static void EnsurePersistentInputControllers()
+    {
+        IPadInputManager iPad = IPadInputManager.Instance;
+
+        if (iPad == null)
+        {
+            iPad = FindFirstObjectByType<IPadInputManager>();
+        }
+
+        if (iPad == null)
+        {
+            GameObject iPadObject = new GameObject("IPadInputManager");
+            iPad = iPadObject.AddComponent<IPadInputManager>();
+        }
+
+        MobileWebController web = instance;
+
+        if (web == null)
+        {
+            web = FindFirstObjectByType<MobileWebController>();
+        }
+
+        if (web == null)
+        {
+            GameObject webObject = new GameObject("MobileWebController");
+            web = webObject.AddComponent<MobileWebController>();
+        }
+
+        if (web.iPadInputManager == null)
+        {
+            web.iPadInputManager = iPad;
+        }
+    }
+
+    void Awake()
     {
         if (instance != null && instance != this)
         {
@@ -29,6 +64,19 @@ public class MobileWebController : MonoBehaviour
 
         instance = this;
         DontDestroyOnLoad(gameObject);
+    }
+
+    void Start()
+    {
+        if (instance != this || running)
+        {
+            return;
+        }
+
+        if (iPadInputManager == null)
+        {
+            iPadInputManager = IPadInputManager.Instance;
+        }
 
         running = true;
         serverThread = new Thread(StartServer);
@@ -42,7 +90,7 @@ public class MobileWebController : MonoBehaviour
     {
         if (iPadInputManager == null)
         {
-            iPadInputManager = FindObjectOfType<IPadInputManager>();
+            iPadInputManager = FindFirstObjectByType<IPadInputManager>();
         }
 
         lock (lockObj)
@@ -313,16 +361,18 @@ function tryMove(id) {
     if (finished) return;
 
     if (lockedBySpecialScene) {
+        send(id);
         document.getElementById('status').innerText =
-            'Special scene is active. Please wait...';
+            'Special scene command sent. Please wait...';
         return;
     }
 
     let neighbours = getNeighbours();
 
     if (!neighbours[currentTile].includes(id)) {
+        send(id);
         document.getElementById('status').innerText =
-            'Invalid move. Choose an adjacent tile.';
+            'Direct command sent. Choose an adjacent tile to move.';
         return;
     }
 

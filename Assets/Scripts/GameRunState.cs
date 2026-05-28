@@ -7,9 +7,29 @@ public static class GameRunState
     public const string BeginSceneName = "Begin";
     public const string EndSceneName = "End";
 
+    const int PerfectFocusScore = 9999;
+    const float PerfectTimeSeconds = 90f;
+
     const string Prefix = "IgnoreMe.";
     const string ReturnSceneKey = "ReturnSceneName";
     const string ReturnNodeKey = "ReturnNodeName";
+    const string VisitedNodeNamesKey = "VisitedNodeNames";
+    const char VisitedNodeSeparator = '|';
+
+    public struct FocusScoreResult
+    {
+        public int Score;
+        public int TimePenalty;
+        public int StepPenalty;
+        public int BranchPenalty;
+        public int DistractionPenalty;
+    }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    static void ResetRunAtPlayStart()
+    {
+        ResetRun();
+    }
 
     public static void ResetRun()
     {
@@ -21,6 +41,7 @@ public static class GameRunState
             "MainActualSteps",
             "MainIdealSteps",
             "MainExtraSteps",
+            "MainMazeRotationCount",
             "EmailEntered",
             "EmailCompleted",
             "EmailDuration",
@@ -48,7 +69,9 @@ public static class GameRunState
 
         PlayerPrefs.DeleteKey(ReturnSceneKey);
         PlayerPrefs.DeleteKey(ReturnNodeKey);
+        PlayerPrefs.DeleteKey(Prefix + VisitedNodeNamesKey);
         PlayerPrefs.Save();
+        RunCounterManager.SyncActiveCounters();
     }
 
     public static void BeginRun()
@@ -56,6 +79,7 @@ public static class GameRunState
         SetInt("RunStarted", 1);
         SetFloat("RunStartTime", Time.time);
         PlayerPrefs.Save();
+        RunCounterManager.SyncActiveCounters();
     }
 
     public static void EnsureRunStarted()
@@ -85,6 +109,47 @@ public static class GameRunState
         return actualSteps;
     }
 
+    public static bool HasVisitedNode(string nodeName)
+    {
+        if (string.IsNullOrEmpty(nodeName))
+        {
+            return false;
+        }
+
+        string visitedNodeNames = GetString(VisitedNodeNamesKey, "");
+        string[] names = visitedNodeNames.Split(VisitedNodeSeparator);
+
+        foreach (string name in names)
+        {
+            if (name == nodeName)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static void MarkNodeVisited(string nodeName)
+    {
+        if (string.IsNullOrEmpty(nodeName) || HasVisitedNode(nodeName))
+        {
+            return;
+        }
+
+        string visitedNodeNames = GetString(VisitedNodeNamesKey, "");
+        if (string.IsNullOrEmpty(visitedNodeNames))
+        {
+            SetString(VisitedNodeNamesKey, nodeName);
+        }
+        else
+        {
+            SetString(VisitedNodeNamesKey, visitedNodeNames + VisitedNodeSeparator + nodeName);
+        }
+
+        PlayerPrefs.Save();
+    }
+
     public static bool HasEnteredBranch(string sceneName)
     {
         string scenePrefix = GetScenePrefix(sceneName);
@@ -101,6 +166,7 @@ public static class GameRunState
 
         SetInt(scenePrefix + "Entered", 1);
         PlayerPrefs.Save();
+        RunCounterManager.SyncActiveCounters();
     }
 
     public static bool CanEnterBranch(string sceneName)
@@ -150,6 +216,34 @@ public static class GameRunState
         PlayerPrefs.Save();
     }
 
+    public static int GetMainMazeRotationCount()
+    {
+        return GetInt("MainMazeRotationCount", 0);
+    }
+
+    public static bool HasMainMazeRotated()
+    {
+        return GetMainMazeRotationCount() > 0;
+    }
+
+    public static int AdvanceMainMazeRotationCount()
+    {
+        int rotationCount = GetMainMazeRotationCount() + 1;
+        SetInt("MainMazeRotationCount", rotationCount);
+        PlayerPrefs.Save();
+        RunCounterManager.SyncActiveCounters();
+        return rotationCount;
+    }
+
+    public static int GetVisitedBranchCount()
+    {
+        int count = 0;
+        count += HasEnteredBranch("Email") ? 1 : 0;
+        count += HasEnteredBranch("Shopping") ? 1 : 0;
+        count += HasEnteredBranch("Ins") ? 1 : 0;
+        return count;
+    }
+
     public static void SaveEmailStats(int totalSpawned, int active, int read, int unread)
     {
         SetInt("EmailTotalSpawned", totalSpawned);
@@ -176,12 +270,24 @@ public static class GameRunState
 
     public static string BuildEndSummary()
     {
+        RunCounterManager.SyncActiveCounters();
+        FocusScoreResult score = CalculateFocusScore();
+
         return "Run summary\n\n"
+            + "Focus score: " + score.Score.ToString("0000") + "/" + PerfectFocusScore + "\n"
+            + "Deductions\n"
+            + "Time: -" + score.TimePenalty + "\n"
+            + "Backtracking: -" + score.StepPenalty + "\n"
+            + "Special spaces: -" + score.BranchPenalty + "\n"
+            + "Distractions: -" + score.DistractionPenalty + "\n\n"
             + "Main game\n"
             + "Time: " + GetFloat("MainTimeSeconds", 0f).ToString("0") + "s\n"
             + "Actual steps: " + GetInt("MainActualSteps", 0) + "\n"
             + "Ideal path: " + GetInt("MainIdealSteps", 0) + "\n"
-            + "Extra steps: " + GetInt("MainExtraSteps", 0) + "\n\n"
+            + "Extra steps: " + GetInt("MainExtraSteps", 0) + "\n"
+            + "Maze rotated: " + YesNo(HasMainMazeRotated()) + "\n"
+            + "Rotation count: " + GetMainMazeRotationCount() + "\n"
+            + "Special spaces visited: " + GetVisitedBranchCount() + "/3\n\n"
             + "Email\n"
             + "Visited: " + YesNo(GetInt("EmailEntered", 0) > 0) + "\n"
             + "Mail: " + GetInt("EmailActive", 0) + "/" + GetInt("EmailTotalSpawned", 0) + "\n"
@@ -194,6 +300,52 @@ public static class GameRunState
             + "Visited: " + YesNo(GetInt("InsEntered", 0) > 0) + "\n"
             + "Photo views: " + GetInt("InsViews", 0) + "\n"
             + "Notifications: " + GetInt("InsNotifications", 0);
+    }
+
+    public static FocusScoreResult CalculateFocusScore()
+    {
+        float timeSeconds = GetFloat("MainTimeSeconds", 0f);
+        int extraSteps = GetInt("MainExtraSteps", 0);
+
+        bool emailEntered = GetInt("EmailEntered", 0) > 0;
+        bool shoppingEntered = GetInt("ShoppingEntered", 0) > 0;
+        bool insEntered = GetInt("InsEntered", 0) > 0;
+
+        int timePenalty = Mathf.Clamp(
+            Mathf.CeilToInt(Mathf.Max(0f, timeSeconds - PerfectTimeSeconds) * 18f),
+            0,
+            2600);
+
+        int stepPenalty = Mathf.Clamp(extraSteps * 520, 0, 2600);
+
+        int branchPenalty = 0;
+        branchPenalty += emailEntered ? 900 + Mathf.RoundToInt(GetFloat("EmailDuration", 0f) * 10f) : 0;
+        branchPenalty += shoppingEntered ? 900 + Mathf.RoundToInt(GetFloat("ShoppingDuration", 0f) * 10f) : 0;
+        branchPenalty += insEntered ? 900 + Mathf.RoundToInt(GetFloat("InsDuration", 0f) * 10f) : 0;
+        branchPenalty = Mathf.Clamp(branchPenalty, 0, 3600);
+
+        int distractionPenalty = 0;
+        distractionPenalty += GetInt("EmailRead", 0) * 160;
+        distractionPenalty += GetInt("EmailUnread", 0) * 45;
+        distractionPenalty += GetInt("ShoppingPopups", 0) * 45;
+        distractionPenalty += GetInt("ShoppingTouchedShore", 0) > 0 ? 700 : 0;
+        distractionPenalty += GetInt("InsViews", 0) * 200;
+        distractionPenalty += GetInt("InsNotifications", 0) * 25;
+        distractionPenalty = Mathf.Clamp(distractionPenalty, 0, 3200);
+
+        int score = Mathf.Clamp(
+            PerfectFocusScore - timePenalty - stepPenalty - branchPenalty - distractionPenalty,
+            0,
+            PerfectFocusScore);
+
+        return new FocusScoreResult
+        {
+            Score = score,
+            TimePenalty = timePenalty,
+            StepPenalty = stepPenalty,
+            BranchPenalty = branchPenalty,
+            DistractionPenalty = distractionPenalty
+        };
     }
 
     static string GetScenePrefix(string sceneName)
@@ -239,5 +391,15 @@ public static class GameRunState
     static float GetFloat(string key, float fallback)
     {
         return PlayerPrefs.GetFloat(Prefix + key, fallback);
+    }
+
+    static void SetString(string key, string value)
+    {
+        PlayerPrefs.SetString(Prefix + key, value);
+    }
+
+    static string GetString(string key, string fallback)
+    {
+        return PlayerPrefs.GetString(Prefix + key, fallback);
     }
 }

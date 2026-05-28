@@ -27,6 +27,11 @@ public class PhotoNotificationPreviewController : MonoBehaviour
     public TextMeshProUGUI countdownText;
     public TextMeshProUGUI viewCountText;
 
+    [Header("Responsive Layout")]
+    public Camera layoutCamera;
+    public RectTransform readingCanvas;
+    public float cameraPadding = 1.08f;
+
     float notificationTimer;
     float previewAmount;
     float experienceTimer;
@@ -35,6 +40,9 @@ public class PhotoNotificationPreviewController : MonoBehaviour
     int notificationCount;
     bool wasPreviewing;
     int nextPhotoIndex;
+    int lastScreenWidth = -1;
+    int lastScreenHeight = -1;
+    float lastCameraAspect = -1f;
 
     public int ViewCount
     {
@@ -75,6 +83,9 @@ public class PhotoNotificationPreviewController : MonoBehaviour
 
     void Start()
     {
+        ResolveResponsiveReferences();
+        ApplyResponsiveLayout(true);
+
         notificationTimer = -firstNotificationDelay;
         experienceTimer = experienceDuration;
         SetGroup(dimmerGroup, 0f);
@@ -89,6 +100,8 @@ public class PhotoNotificationPreviewController : MonoBehaviour
 
     void Update()
     {
+        ApplyResponsiveLayout(false);
+
         experienceTimer = Mathf.Max(0f, experienceTimer - Time.deltaTime);
         UpdateStats();
 
@@ -239,5 +252,51 @@ public class PhotoNotificationPreviewController : MonoBehaviour
         group.alpha = amount;
         group.blocksRaycasts = amount > 0.01f;
         group.interactable = amount > 0.99f;
+    }
+
+    void ResolveResponsiveReferences()
+    {
+        if (layoutCamera == null)
+        {
+            layoutCamera = Camera.main;
+        }
+
+        if (readingCanvas == null)
+        {
+            readingCanvas = GetComponent<RectTransform>();
+        }
+    }
+
+    void ApplyResponsiveLayout(bool force)
+    {
+        ResolveResponsiveReferences();
+
+        if (layoutCamera == null || readingCanvas == null || !layoutCamera.orthographic)
+        {
+            return;
+        }
+
+        int screenWidth = Screen.width;
+        int screenHeight = Screen.height;
+        float aspect = Mathf.Max(0.01f, layoutCamera.aspect);
+
+        if (!force
+            && screenWidth == lastScreenWidth
+            && screenHeight == lastScreenHeight
+            && Mathf.Approximately(aspect, lastCameraAspect))
+        {
+            return;
+        }
+
+        lastScreenWidth = screenWidth;
+        lastScreenHeight = screenHeight;
+        lastCameraAspect = aspect;
+
+        Vector3 scale = readingCanvas.lossyScale;
+        float halfCanvasWidth = readingCanvas.rect.width * Mathf.Abs(scale.x) * 0.5f;
+        float halfCanvasHeight = readingCanvas.rect.height * Mathf.Abs(scale.y) * 0.5f;
+        float fittedSize = Mathf.Max(halfCanvasHeight, halfCanvasWidth / aspect);
+
+        layoutCamera.orthographicSize = fittedSize * Mathf.Max(1f, cameraPadding);
     }
 }
