@@ -12,7 +12,7 @@ public class TestMailInteractionController : MonoBehaviour
     public string sceneTitleText = "The Tree of Focus Disturbed by Emails";
 
     [Header("Timing")]
-    public float countdownSeconds = 30f;
+    public float countdownSeconds = 15f;
 
     [Header("References")]
     public TestMailPopupUI popupUI;

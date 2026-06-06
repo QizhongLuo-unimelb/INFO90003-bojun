@@ -49,13 +49,13 @@ MonoBehaviour:
   statusText: {fileID: 0}
   timerText: {fileID: 0}
   shoreTrigger: {fileID: 0}
-  travelSeconds: 30
+  travelSeconds: 15
   startPosition: {x: -12, y: 0.65, z: 0}
   goalPosition: {x: 12, y: 0.65, z: 0}
   startSwayAmplitude: 0.15
   endSwayAmplitude: 2.8
-  distractionReachSeconds: 15
-  swayFrequency: 0.25
+  distractionReachSeconds: 8
+  swayFrequency: 0.5
   maxRollAngle: 14
   maxYawAngle: 8
   focusKey: 109

@@ -3,9 +3,9 @@ using UnityEngine;
 public class TestExperienceController : MonoBehaviour
 {
     [Header("Phase Timing")]
-    public float flowDuration = 3f;
-    public float influxDuration = 15f;
-    public float suffocationDuration = 12f;
+    public float flowDuration = 1.5f;
+    public float influxDuration = 7.5f;
+    public float suffocationDuration = 6f;
 
     [Header("Scene References")]
     public TestEmailSpawner emailSpawner;

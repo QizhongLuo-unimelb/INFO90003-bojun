@@ -937,9 +937,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StudyArticleScroller
   scrollRect: {fileID: 345901275}
-  fullReadDuration: 30
+  fullReadDuration: 15
   startDelay: 0
   playOnStart: 1
+  syncWithSceneDuration: 1
   nextSceneName: Main game
 --- !u!114 &345901275
 MonoBehaviour:
@@ -2640,16 +2641,16 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 162b2727f89e945718a6116e5f0555d7, type: 3}
   - {fileID: 21300000, guid: c77ee6da18d15411cb38263d5ce0a958, type: 3}
   - {fileID: 21300000, guid: ce690c7525ded4a58a0897c72b18efe1, type: 3}
-  firstNotificationDelay: 0.9
-  notificationInterval: 2.85
+  firstNotificationDelay: 0.45
+  notificationInterval: 1.425
   previewKey: 110
   dimmerGroup: {fileID: 310967150}
   previewGroup: {fileID: 1515927294}
   previewCard: {fileID: 1268629507}
   previewImage: {fileID: 89445409}
-  previewFadeSpeed: 7
-  previewScaleSpeed: 9
-  experienceDuration: 30
+  previewFadeSpeed: 14
+  previewScaleSpeed: 18
+  experienceDuration: 15
   countdownText: {fileID: 1065065669}
   viewCountText: {fileID: 2125245832}
 --- !u!114 &1446694993

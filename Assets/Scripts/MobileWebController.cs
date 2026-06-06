@@ -397,7 +397,7 @@ function tryMove(id) {
     }
 
     if (id === 11 || id === 12 || id === 13) {
-        startSpecialSceneLock(31);
+        startSpecialSceneLock(15);
         return;
     }
 

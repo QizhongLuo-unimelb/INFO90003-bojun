@@ -9,6 +9,20 @@ public static class GameRunState
 
     const int PerfectFocusScore = 9999;
     const float PerfectTimeSeconds = 90f;
+    const float TimePenaltyPerSecond = 12f;
+    const int MaxTimePenalty = 1800;
+    const int StepPenaltyPerExtraStep = 350;
+    const int MaxStepPenalty = 1800;
+    const int BranchVisitPenalty = 500;
+    const float BranchDurationPenaltyPerSecond = 5f;
+    const int MaxBranchPenalty = 2200;
+    const int EmailReadPenalty = 100;
+    const int EmailUnreadPenalty = 25;
+    const int ShoppingPopupPenalty = 25;
+    const int ShoppingTouchedShorePenalty = 350;
+    const int InsViewPenalty = 120;
+    const int InsNotificationPenalty = 12;
+    const int MaxDistractionPenalty = 1800;
 
     const string Prefix = "IgnoreMe.";
     const string ReturnSceneKey = "ReturnSceneName";
@@ -312,26 +326,26 @@ public static class GameRunState
         bool insEntered = GetInt("InsEntered", 0) > 0;
 
         int timePenalty = Mathf.Clamp(
-            Mathf.CeilToInt(Mathf.Max(0f, timeSeconds - PerfectTimeSeconds) * 18f),
+            Mathf.CeilToInt(Mathf.Max(0f, timeSeconds - PerfectTimeSeconds) * TimePenaltyPerSecond),
             0,
-            2600);
+            MaxTimePenalty);
 
-        int stepPenalty = Mathf.Clamp(extraSteps * 520, 0, 2600);
+        int stepPenalty = Mathf.Clamp(extraSteps * StepPenaltyPerExtraStep, 0, MaxStepPenalty);
 
         int branchPenalty = 0;
-        branchPenalty += emailEntered ? 900 + Mathf.RoundToInt(GetFloat("EmailDuration", 0f) * 10f) : 0;
-        branchPenalty += shoppingEntered ? 900 + Mathf.RoundToInt(GetFloat("ShoppingDuration", 0f) * 10f) : 0;
-        branchPenalty += insEntered ? 900 + Mathf.RoundToInt(GetFloat("InsDuration", 0f) * 10f) : 0;
-        branchPenalty = Mathf.Clamp(branchPenalty, 0, 3600);
+        branchPenalty += CalculateBranchPenalty(emailEntered, "EmailDuration", GameSceneFlowController.EmailBranchDuration);
+        branchPenalty += CalculateBranchPenalty(shoppingEntered, "ShoppingDuration", GameSceneFlowController.ShoppingBranchDuration);
+        branchPenalty += CalculateBranchPenalty(insEntered, "InsDuration", GameSceneFlowController.InsBranchDuration);
+        branchPenalty = Mathf.Clamp(branchPenalty, 0, MaxBranchPenalty);
 
         int distractionPenalty = 0;
-        distractionPenalty += GetInt("EmailRead", 0) * 160;
-        distractionPenalty += GetInt("EmailUnread", 0) * 45;
-        distractionPenalty += GetInt("ShoppingPopups", 0) * 45;
-        distractionPenalty += GetInt("ShoppingTouchedShore", 0) > 0 ? 700 : 0;
-        distractionPenalty += GetInt("InsViews", 0) * 200;
-        distractionPenalty += GetInt("InsNotifications", 0) * 25;
-        distractionPenalty = Mathf.Clamp(distractionPenalty, 0, 3200);
+        distractionPenalty += GetInt("EmailRead", 0) * EmailReadPenalty;
+        distractionPenalty += GetInt("EmailUnread", 0) * EmailUnreadPenalty;
+        distractionPenalty += GetInt("ShoppingPopups", 0) * ShoppingPopupPenalty;
+        distractionPenalty += GetInt("ShoppingTouchedShore", 0) > 0 ? ShoppingTouchedShorePenalty : 0;
+        distractionPenalty += GetInt("InsViews", 0) * InsViewPenalty;
+        distractionPenalty += GetInt("InsNotifications", 0) * InsNotificationPenalty;
+        distractionPenalty = Mathf.Clamp(distractionPenalty, 0, MaxDistractionPenalty);
 
         int score = Mathf.Clamp(
             PerfectFocusScore - timePenalty - stepPenalty - branchPenalty - distractionPenalty,
@@ -346,6 +360,17 @@ public static class GameRunState
             BranchPenalty = branchPenalty,
             DistractionPenalty = distractionPenalty
         };
+    }
+
+    static int CalculateBranchPenalty(bool entered, string durationKey, float expectedDuration)
+    {
+        if (!entered)
+        {
+            return 0;
+        }
+
+        float duration = Mathf.Clamp(GetFloat(durationKey, expectedDuration), 0f, expectedDuration);
+        return BranchVisitPenalty + Mathf.RoundToInt(duration * BranchDurationPenaltyPerSecond);
     }
 
     static string GetScenePrefix(string sceneName)

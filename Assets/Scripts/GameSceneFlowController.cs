@@ -5,7 +5,10 @@ using UnityEngine.UI;
 
 public class GameSceneFlowController : MonoBehaviour
 {
-    const float BranchDuration = 30f;
+    public const float EmailBranchDuration = 15f;
+    public const float ShoppingBranchDuration = 15f;
+    public const float ShoppingNaturalDistractionSeconds = 8f;
+    public const float InsBranchDuration = 15f;
     const float EndDuration = 15f;
     const float ShoppingDistractionReturnDelay = 3f;
 
@@ -83,6 +86,7 @@ public class GameSceneFlowController : MonoBehaviour
         if (IsBranchScene())
         {
             sceneTimer += Time.deltaTime;
+            float branchDuration = GetBranchDuration(activeSceneName);
 
             if (ShouldReturnAfterShoppingDistraction())
             {
@@ -97,7 +101,7 @@ public class GameSceneFlowController : MonoBehaviour
                 shoppingDistractionTimer = 0f;
             }
 
-            if (!isReturning && sceneTimer >= BranchDuration)
+            if (!isReturning && sceneTimer >= branchDuration)
             {
                 ReturnFromActiveBranch();
             }
@@ -161,12 +165,39 @@ public class GameSceneFlowController : MonoBehaviour
 
         if (activeSceneName == "Shopping")
         {
+            RiverBoatGameController boat = FindFirstObjectByType<RiverBoatGameController>();
+            if (boat != null)
+            {
+                boat.travelSeconds = ShoppingBranchDuration;
+                boat.distractionReachSeconds = ShoppingNaturalDistractionSeconds;
+            }
+
             BuildBranchCanvas(
                 "A Mind Ship Distracted by Website Shopping Notifications",
                 "Press the entrance button of this zone to Keep the ship in the middle",
                 false);
             return;
         }
+    }
+
+    public static float GetBranchDuration(string sceneName)
+    {
+        if (sceneName == "Email")
+        {
+            return EmailBranchDuration;
+        }
+
+        if (sceneName == "Shopping")
+        {
+            return ShoppingBranchDuration;
+        }
+
+        if (sceneName == "Ins")
+        {
+            return InsBranchDuration;
+        }
+
+        return InsBranchDuration;
     }
 
     void InitializePlaySessionIfNeeded(string sceneName)

@@ -146,9 +146,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NewPhotoNotificationMotion
   canvasGroup: {fileID: 6893532521123651383}
   rectTransform: {fileID: 1228684981860444965}
-  visibleDuration: 2.35
+  visibleDuration: 1.175
   slideDistance: 68
-  easeDuration: 0.24
+  easeDuration: 0.12
 --- !u!1 &1298926682240494459
 GameObject:
   m_ObjectHideFlags: 0

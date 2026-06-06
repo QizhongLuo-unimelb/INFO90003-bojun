@@ -1127,8 +1127,8 @@ MonoBehaviour:
   emailPrefab: {fileID: 6799972326361932827, guid: 14c510f62f24a41aeb5ffaf4aee780a8, type: 3}
   spawnZoneSize: {x: 7.2, y: 1.4, z: 5.8}
   initialVelocity: {x: 0.04, y: -8.6, z: 0}
-  initialSpawnInterval: 0.32
-  minimumSpawnInterval: 0.12
+  initialSpawnInterval: 0.16
+  minimumSpawnInterval: 0.06
   accelerationRate: 0.985
   maxSpawnedEmails: 320
 --- !u!1 &1830821856
@@ -1160,9 +1160,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b6b5dc9646094077a120bf19b20e265, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TestExperienceController
-  flowDuration: 3
-  influxDuration: 15
-  suffocationDuration: 12
+  flowDuration: 1.5
+  influxDuration: 7.5
+  suffocationDuration: 6
   emailSpawner: {fileID: 1799621882}
   leafAtrophy: {fileID: 2035288705}
   keyLight: {fileID: 985252467}

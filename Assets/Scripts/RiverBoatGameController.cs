@@ -12,15 +12,15 @@ public class RiverBoatGameController : MonoBehaviour
     public RiverBoatShoreTrigger shoreTrigger;
 
     [Header("Route")]
-    public float travelSeconds = 30f;
+    public float travelSeconds = 15f;
     public Vector3 startPosition = new Vector3(-12f, 0.65f, 0f);
     public Vector3 goalPosition = new Vector3(12f, 0.65f, 0f);
 
     [Header("Boat Wobble")]
     public float startSwayAmplitude = 0.15f;
     public float endSwayAmplitude = 2.8f;
-    public float distractionReachSeconds = 15f;
-    public float swayFrequency = 0.25f;
+    public float distractionReachSeconds = 8f;
+    public float swayFrequency = 0.5f;
     public float maxRollAngle = 14f;
     public float maxYawAngle = 8f;
 

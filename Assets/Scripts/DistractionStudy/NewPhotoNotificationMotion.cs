@@ -4,9 +4,9 @@ public class NewPhotoNotificationMotion : MonoBehaviour
 {
     public CanvasGroup canvasGroup;
     public RectTransform rectTransform;
-    public float visibleDuration = 2.2f;
+    public float visibleDuration = 1.1f;
     public float slideDistance = 92f;
-    public float easeDuration = 0.28f;
+    public float easeDuration = 0.14f;
 
     Vector2 restingPosition;
     float age;

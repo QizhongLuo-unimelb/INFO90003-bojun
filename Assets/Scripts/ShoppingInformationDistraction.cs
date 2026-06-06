@@ -13,16 +13,16 @@ public class ShoppingInformationDistraction : MonoBehaviour
     public float bottomClearance = 0.12f;
 
     [Header("Refresh")]
-    public float spawnInterval = 2.4f;
+    public float spawnInterval = 1.2f;
     public int maxVisibleMessages = 4;
-    public float messageLifetime = 5.8f;
+    public float messageLifetime = 2.9f;
     public float minimumSpacing = 4.5f;
 
     [Header("Display")]
     public Vector2 popupSize = new Vector2(360f, 210f);
     public float worldScale = 0.0065f;
-    public float popInDuration = 0.22f;
-    public float popOutDuration = 0.28f;
+    public float popInDuration = 0.11f;
+    public float popOutDuration = 0.14f;
     public float floatAmplitude = 0.045f;
     public Color cardColor = new Color(1f, 0.985f, 0.94f, 1f);
     public Color headerColor = new Color(0.93f, 0.07f, 0.12f, 1f);

@@ -49,14 +49,14 @@ MonoBehaviour:
   southBankZ: -3.85
   shoreSurfaceY: 0.5
   bottomClearance: 0.12
-  spawnInterval: 2.4
+  spawnInterval: 1.2
   maxVisibleMessages: 4
-  messageLifetime: 5.8
+  messageLifetime: 2.9
   minimumSpacing: 4.5
   popupSize: {x: 360, y: 210}
   worldScale: 0.0065
-  popInDuration: 0.22
-  popOutDuration: 0.28
+  popInDuration: 0.11
+  popOutDuration: 0.14
   floatAmplitude: 0.045
   cardColor: {r: 1, g: 0.985, b: 0.94, a: 1}
   headerColor: {r: 0.93, g: 0.07, b: 0.12, a: 1}

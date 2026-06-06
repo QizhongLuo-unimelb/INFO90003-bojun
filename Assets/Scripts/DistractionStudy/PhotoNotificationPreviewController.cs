@@ -1,5 +1,6 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class PhotoNotificationPreviewController : MonoBehaviour
@@ -9,8 +10,8 @@ public class PhotoNotificationPreviewController : MonoBehaviour
     public RectTransform notificationRoot;
     public Sprite instagramIcon;
     public Sprite[] notificationPhotos;
-    public float firstNotificationDelay = 1f;
-    public float notificationInterval = 3.2f;
+    public float firstNotificationDelay = 0.5f;
+    public float notificationInterval = 1.6f;
 
     [Header("Preview")]
     public KeyCode previewKey = KeyCode.N;
@@ -18,12 +19,12 @@ public class PhotoNotificationPreviewController : MonoBehaviour
     public CanvasGroup previewGroup;
     public RectTransform previewCard;
     public Image previewImage;
-    public float previewFadeSpeed = 7f;
-    public float previewScaleSpeed = 9f;
+    public float previewFadeSpeed = 14f;
+    public float previewScaleSpeed = 18f;
     public float externalPreviewSeconds = 0.9f;
 
     [Header("Stats")]
-    public float experienceDuration = 30f;
+    public float experienceDuration = 15f;
     public TextMeshProUGUI countdownText;
     public TextMeshProUGUI viewCountText;
 
@@ -86,6 +87,7 @@ public class PhotoNotificationPreviewController : MonoBehaviour
         ResolveResponsiveReferences();
         ApplyResponsiveLayout(true);
 
+        experienceDuration = GameSceneFlowController.GetBranchDuration(SceneManager.GetActiveScene().name);
         notificationTimer = -firstNotificationDelay;
         experienceTimer = experienceDuration;
         SetGroup(dimmerGroup, 0f);
